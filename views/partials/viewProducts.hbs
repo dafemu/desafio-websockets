@@ -1,0 +1,26 @@
+<table class="table table-striped">
+    {{#if productExist}}
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Precio</th>
+            <th>Imagen</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{#each productList}}
+        <tr>
+            <td>{{title}}</td>
+            <td>{{price}}</td>
+            <td>
+                <img src="{{thumbnail}}" class="img-thumbnail" alt="{{title}}">
+            </td>
+        </tr>
+        {{/each}}
+    </tbody>
+    {{else}}
+        <div class="alert alert-warning" role="alert">
+            No se encontraron productos
+        </div>
+    {{/if}}
+</table>
