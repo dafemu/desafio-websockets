@@ -1,16 +1,14 @@
 const express = require('express');
-const { Router } = express;
 
 //Socket.io
 const { Server: HttpServer } = require('http');
 const { Server: IOServer } = require('socket.io');
 
-//cargo el modulo handlebars
-const handlebars = require("express-handlebars");
+// //cargo el modulo handlebars
+const Handlebars = require("handlebars");
 
 //instancia
 const app = express();
-const router = Router();
 
 //socket.io
 const httpServer = new HttpServer(app);
@@ -21,55 +19,45 @@ app.use(express.static("public"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-//requires propios
-const modController = require('./controller');
-
-//establecemoos la configuracion de handlebars
-app.engine(
-    "hbs",
-    handlebars.engine({
-        extname: ".hbs",
-        defaultLayout: "index.hbs",
-        layoutsDir: __dirname + "/views/layouts",
-        partialsDir: __dirname + "/views/partials"
-    })
-);
 
 //establecemos el motor de platilla que se utiliza
 app.set("view engine", "hbs");
 
-//establecemos el directorio donde se encuentran los archivos de platilla
-app.set("views", "./views");
+let productos = [];
+let mensajes = [];
+
+function setProducto(objProducto) {
+    console.log("entro al setproduct");
+    if(productos.length == 0){
+        objProducto.id = 1;
+    }else{
+        let id = productos[productos.length-1].id
+        objProducto.id = id + 1;
+    }
+    productos.push(objProducto);
+    return productos;
+}
 
 //socket.io etablecemos comunicacion
 io.on('connection', (socket) => {
     console.log('un cliente se ha conectado');
-    socket.emit('productos', modController.getProductos());
+    socket.emit('productos', productos);
+    socket.emit('mensajes', mensajes);
+
+    socket.on('nuevo-producto', data => {
+        console.log('servidor productos');
+        setProducto(data)
+        io.sockets.emit('productos', productos);
+    });
+
+    socket.on('nuevo-mensaje', data => {
+        console.log('servidor mensajes');
+
+        mensajes.push(data);
+        io.sockets.emit('mensajes', mensajes);
+    });
 });
 
-//rutas y metodos
-router.get("/", function (req, res) {
-    console. log('GET request recibido');
-    const productos = modController.getProductos();
-    //res.sendFile("main", { root: __dirname });
-    (productos.length > 0)
-    ? res.render("main", { productList: productos, productExist:true })
-    : res.render("main", { productList: productos, productExist:false })
-}); 
-
-router.post("/", function (req, res) {
-    console.log('POST request recibido');
-    const nuevoProducto = {
-        title: req.body.productoNombre,
-        price: req.body.productoPrecio,
-        thumbnail: req.body.productoImagen,
-    };
-    const newList = modController.setProducto(nuevoProducto);
-    res.render("main", { productList: newList, productExist:true })
+httpServer.listen(8080, () => {
+    console.log("Server on port 8080");
 });
-
-
-//configuro la ruta
-app.use('/productos', router);
-
-httpServer.listen(8080, () => console.log("SERVER ON"));
