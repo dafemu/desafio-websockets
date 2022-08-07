@@ -19,8 +19,12 @@ formulario.addEventListener('submit', function(e){
     }
 
     socket.emit('nuevo-producto', producto);
-
+    resetearFormulario();
 });
+
+function resetearFormulario(){
+    formulario.reset();
+}
 
 socket.on('productos', data => {
     console.log("data cliente productos: ",data);
@@ -30,15 +34,15 @@ socket.on('productos', data => {
 socket.on('mensajes', data => {
     console.log("data cliente mensaje: ",data);
     renderMensajes(data);
-    formulario.reset();
 });
 
 function renderMensajes(data){
     const html = data.map((elem, index) => {
         return (
             `<div>
-                <strong>${elem.author}</strong>
-                <em>${elem.text}</em>
+                <strong class='text-primary'>${elem.author}</strong>
+                <time class='text-muted'>${elem.date}</time>
+                : <em>${elem.text}</em>
             </div>`
         )
     }).join(" ");
@@ -89,7 +93,8 @@ function addMessage(e){
     console.log("add  message");
     const mensaje = {
         author: document.getElementById('username').value,
-        text: document.getElementById('texto').value
+        text: document.getElementById('texto').value,
+        date: new Date(),
     };
     socket.emit('nuevo-mensaje', mensaje);
 
